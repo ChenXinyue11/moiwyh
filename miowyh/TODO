@@ -1,0 +1,87 @@
+- remembering miai from previous board states is perhaps a flaw, esp after
+  an oppt move ... better to select best miai on the fly ... but how?
+
+- now that mustplay updates are in Playout, don't actually need refine_MP, probably more elegant though
+
+- miai are picked randomly among (up to) 6 possible nbr possibilities...
+  sometimes the best (ie. winning) miai is not picked ...
+  so maybe have a fast check in moveMiaPart which picks a winning miai combo if there is one
+  note: label miai possibilities 0-5, where consecutive miai share a carrier cell...
+  then the maximal miai sets are always subsets of 024, 135, 03, 14, 25,
+  so simple check is see if union of brdr values any of these (at most 5) subsets
+  yields all-sides, in which case we have a winner.
+
+- negamax: 
+   - needs history, so that oppnt board connectivity can be updated after player's last move
+   - needs a better state score function
+       - win ratio not enough,  need to incorporate length, maybe relative averages of ? shortest win lengths
+
+- add 432 and 321 miai to side (then true mustplay reasoning)
+- boolean sets for mustplay
+- negamax
+- if that doesn't work, add pattern * x *     ... maybe in playout ?
+                                     . .  
+                                      !  
+
+- playouts: random order, not linear
+- playouts: turn off auto-miai-reply
+
+* test efficacy of accelerated playouts
+
+* when playing game with miai
+  if miai-win found
+    then from that point on use miai to play!!!
+     record the win value
+    if when you play you had a win before,
+    and opponent has played at most one intermediate move,
+    then search for miai where opponent has played, play the reply and clear the miai
+    if opponent played no miai, then play in any miai and clear the miai
+* release miai when opponent plays there...
+  if not autoresponding then degrade connectivity
+  how? 
+    * keep miai-adjacency list 
+    * remove from list
+    * recompute connectivity from stones and mia list
+
+* consistent naming convention: best_move or bestMove ?
+* extract playout from monte carlo/genmove
+
+**** rollout connectivity ...
+ for each group, store
+   - stones
+   - miai
+   - nbrs  ... = union(over stones) nbr(stone) \ 
+                 union(over miai cells)
+  newgroup <- new stone
+  while 
+  |nbrs(newgroup) intersect nbrs(some group x)| >= 2
+    - newgroup <- newgroup combined with x
+         newgroup.stones union= x.stones
+         newgroup.miai union= x.miai union {2 cells from inters}
+         newgroup.nbrs = ...
+  when opponent plays a stone into a miai
+    -- play the response
+    -- remove the miai from the group, and add the stone
+    -- update the new groups nbrs
+*****
+*****
+* arbitrary size board using vector (inst const arrays)
+* stl bitsets
+* stl shuffle
+* uct
+
+* other member functions ?  (like init_board)
+* arbitrary game
+* y gui
+* tournament shell script
+* improve on current winners/non-winners ordering in rollouts
+    ?move-to-front?  
+    ?probabilistic sampling based on wins
+       with prior 1-1-1-...-1 initialization
+    ?? less random: don't shuffle sublist after recently found winner...
+* win lookahead in rollouts
+* better move gen:
+     certain number of pure MC
+     then for every cell with some winner
+         make move and report opponent win %
+     pick move min opponent win %
